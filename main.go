@@ -13,11 +13,10 @@ const (
 )
 
 const (
-	RefreshRate = 20  // 画面刷新帧率
-	UpdateRate  = 200 // 游戏状态更新帧率
+	RefreshRate = 100.0 // 画面刷新帧率
+	UpdateRate  = 200.0 // 游戏状态更新帧率
+	InitSpeed = 3 // 初始下落速度
 )
-
-var speed = 3 // 方块下落的速度，1000/speed 表示多少毫秒下落一格，updateRate/speed 表示多少帧下落一格
 
 func main() {
 	// 初始化termbox
@@ -32,11 +31,11 @@ func main() {
 	game.Render()
 
 	// 创建一个定时器，用于定时刷新屏幕
-	refreshRateTicker := time.NewTicker(1000 / RefreshRate * time.Millisecond)
+	refreshRateTicker := time.NewTicker(1000.0 / RefreshRate * time.Millisecond)
 	defer refreshRateTicker.Stop()
 
 	// 创建一个定时器，用于定时更新游戏状态
-	gameStepTicker := time.NewTicker(1000 / UpdateRate * time.Millisecond)
+	gameStepTicker := time.NewTicker(1000.0 / UpdateRate * time.Millisecond)
 	defer gameStepTicker.Stop()
 
 	// 使用channel来处理事件

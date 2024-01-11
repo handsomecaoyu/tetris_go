@@ -10,12 +10,16 @@ type Game struct {
 	width      int
 	background [][]int
 	tetromino  Tetromino
+	score      int
 }
 
 type Point struct {
 	x int
 	y int
 }
+
+// 消除行数对应的分数
+var scores = []int{0, 10, 30, 60, 100}
 
 // 初始化游戏
 func (g *Game) Init(height, width int) {
@@ -39,7 +43,7 @@ func randomTetromino(tetrominoShapes [][]TetrominoShape) Tetromino {
 		shapeIndex:           index2,
 		shape:                tetrominoShapes[index1][index2],
 		speed:                2,
-		moveDownFrameNum:     UpdateRate / speed,
+		moveDownFrameNum:     UpdateRate / 2,
 		moveDownFrameCounter: 0,
 	}
 	return tetromino
@@ -48,31 +52,39 @@ func randomTetromino(tetrominoShapes [][]TetrominoShape) Tetromino {
 // 根据数组来在终端绘制图像
 func (g *Game) Render() {
 	matrix := g.addTetromino()
+	frame := ""
 	for i := 0; i < g.height; i++ {
 		// 绘制墙壁
-		fmt.Print("|")
+		frame += "|"
 		for j := 0; j < g.width; j++ {
 			switch matrix[i][j] {
 			case 0:
-				fmt.Print("  ")
+				frame += "  "
 			case 1:
-				fmt.Print("██")
+				frame += "██"
 			}
 		}
-		fmt.Print("|\n")
+		frame += "|"
+		if i == 3 {
+			frame += fmt.Sprintf("  Score: %d", g.score)
+		}
+		frame += "\n"
 	}
 	for i := 0; i < width+2; i++ {
-		fmt.Print("——")
+		frame += "=="
 	}
+	fmt.Print(frame)
 	// fmt.Print("\n")
 }
 
 // 将在终端绘制的图像清空
 func (g *Game) Clear() {
-	for i := 0; i < g.height; i++ {
-		fmt.Print("\033[1A")
-		fmt.Print("\r\033[K")
-	}
+	// for i := 0; i < g.height; i++ {
+	// 	fmt.Print("\033[1A")
+	// 	fmt.Print("\r\033[K")
+	// }
+	fmt.Print("\033[H\033[2J")
+
 }
 
 // 将方块添加到背景中
@@ -110,11 +122,17 @@ func (g *Game) Up() {
 	temp.Rotate()
 	if !g.checkCollision(temp, g.background) {
 		g.tetromino.Rotate()
-	} 
+	}
 }
 
-// 按下方向键下，方块加速下落
+// 按下方向键下，方块直接下落到最下侧
 func (g *Game) Down() {
+	temp := copyTetromino(g.tetromino)
+	temp.point.x++
+	for !g.checkCollision(temp, g.background) {
+		temp.point.x++
+	}
+	g.tetromino.point.x = temp.point.x - 1
 
 }
 
@@ -127,6 +145,7 @@ func (g *Game) Left() {
 	}
 }
 
+// 按下方向键右，方块右移
 func (g *Game) Right() {
 	temp := copyTetromino(g.tetromino)
 	temp.point.y++
@@ -148,6 +167,8 @@ func (g *Game) Step() bool {
 		} else {
 			// 将方块添加到背景中
 			g.background = g.addTetromino()
+			// 消除满行
+			g.Eliminate()
 			// 从TetrominoShapes随机选择一个方块
 			g.tetromino = randomTetromino(TetrominoShapes)
 			if g.checkCollision(g.tetromino, g.background) {
@@ -161,10 +182,35 @@ func (g *Game) Step() bool {
 // 复制一个Tetromino
 func copyTetromino(tetromino Tetromino) Tetromino {
 	return Tetromino{
-		point: tetromino.point,
-		shape: tetromino.shape,
-		typeIndex: tetromino.typeIndex,
+		point:      tetromino.point,
+		shape:      tetromino.shape,
+		typeIndex:  tetromino.typeIndex,
 		shapeIndex: tetromino.shapeIndex,
-		speed: tetromino.speed,
+		speed:      tetromino.speed,
 	}
+}
+
+// 消除满行
+func (g *Game) Eliminate() {
+	offset := 0
+	for i := g.height - 1; i >= 0; i-- {
+		if g.isFullLine(i) {
+			offset++
+			continue
+		}
+		g.background[i+offset] = g.background[i]
+	}
+	for i := 0; i < offset; i++ {
+		g.background[i] = make([]int, g.width)
+	}
+	g.score += scores[offset]
+}
+
+func (g *Game) isFullLine(line int) bool {
+	for i := 0; i < g.width; i++ {
+		if g.background[line][i] == 0 {
+			return false
+		}
+	}
+	return true
 }

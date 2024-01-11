@@ -21,6 +21,10 @@ type Point struct {
 // 消除行数对应的分数
 var scores = []int{0, 10, 30, 60, 100}
 
+const InitSpeed = 3.0
+
+var Speed = InitSpeed // 初始下落速度
+
 // 初始化游戏
 func (g *Game) Init(height, width int) {
 	g.background = make([][]int, height)
@@ -42,8 +46,8 @@ func randomTetromino(tetrominoShapes [][]TetrominoShape) Tetromino {
 		typeIndex:            index1,
 		shapeIndex:           index2,
 		shape:                tetrominoShapes[index1][index2],
-		speed:                2,
-		moveDownFrameNum:     UpdateRate / 2,
+		speed:                Speed,
+		moveDownFrameNum:     int(UpdateRate / Speed),
 		moveDownFrameCounter: 0,
 	}
 	return tetromino
@@ -79,11 +83,11 @@ func (g *Game) Render() {
 
 // 将在终端绘制的图像清空
 func (g *Game) Clear() {
-	// for i := 0; i < g.height; i++ {
-	// 	fmt.Print("\033[1A")
-	// 	fmt.Print("\r\033[K")
-	// }
-	fmt.Print("\033[H\033[2J")
+	for i := 0; i < g.height; i++ {
+		fmt.Print("\033[1A")
+		fmt.Print("\r\033[K")
+	}
+	// fmt.Print("\033[H\033[2J")
 
 }
 
@@ -168,7 +172,11 @@ func (g *Game) Step() bool {
 			// 将方块添加到背景中
 			g.background = g.addTetromino()
 			// 消除满行
-			g.Eliminate()
+			eliminateNum := g.Eliminate()
+			// 更新分数
+			g.score += scores[eliminateNum]
+			// 更新下落速度
+			Speed = InitSpeed + float64(g.score)/200.0
 			// 从TetrominoShapes随机选择一个方块
 			g.tetromino = randomTetromino(TetrominoShapes)
 			if g.checkCollision(g.tetromino, g.background) {
@@ -190,20 +198,20 @@ func copyTetromino(tetromino Tetromino) Tetromino {
 	}
 }
 
-// 消除满行
-func (g *Game) Eliminate() {
-	offset := 0
+// 消除满行，返回消除的行数
+func (g *Game) Eliminate() int {
+	eliminateNum := 0
 	for i := g.height - 1; i >= 0; i-- {
 		if g.isFullLine(i) {
-			offset++
+			eliminateNum++
 			continue
 		}
-		g.background[i+offset] = g.background[i]
+		g.background[i+eliminateNum] = g.background[i]
 	}
-	for i := 0; i < offset; i++ {
+	for i := 0; i < eliminateNum; i++ {
 		g.background[i] = make([]int, g.width)
 	}
-	g.score += scores[offset]
+	return eliminateNum
 }
 
 func (g *Game) isFullLine(line int) bool {

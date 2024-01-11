@@ -5,7 +5,7 @@ type Tetromino struct {
 	typeIndex            int   // 方块类型
 	shapeIndex           int   // 方块形状
 	shape                TetrominoShape
-	speed                int // 方块下落的速度，1000/speed 表示多少毫秒下落一格，updateRate/speed 表示多少帧下落一格
+	speed                float64 // 方块下落的速度，1000/speed 表示多少毫秒下落一格，updateRate/speed 表示多少帧下落一格
 	moveDownFrameNum     int // 用于计算方块下落的帧数
 	moveDownFrameCounter int // 用于计数
 }

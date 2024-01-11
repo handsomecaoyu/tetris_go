@@ -15,8 +15,8 @@ const (
 const (
 	RefreshRate = 100.0 // 画面刷新帧率
 	UpdateRate  = 200.0 // 游戏状态更新帧率
-	InitSpeed = 3 // 初始下落速度
 )
+
 
 func main() {
 	// 初始化termbox

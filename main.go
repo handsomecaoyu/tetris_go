@@ -17,7 +17,6 @@ const (
 	UpdateRate  = 200.0 // 游戏状态更新帧率
 )
 
-
 func main() {
 	// 初始化termbox
 	err := termbox.Init()
@@ -50,18 +49,26 @@ loop:
 		select {
 		case ev := <-eventQueue: // 从channel中取出事件
 			if ev.Type == termbox.EventKey {
-				switch {
-				case ev.Ch == 'W' || ev.Ch == 'w' || ev.Key == termbox.KeyArrowUp:
-					game.Up()
-				case ev.Ch == 'S' || ev.Ch == 's' || ev.Key == termbox.KeyArrowDown:
-					game.Down()
-				case ev.Ch == 'A' || ev.Ch == 'a' || ev.Key == termbox.KeyArrowLeft:
-					game.Left()
-				case ev.Ch == 'D' || ev.Ch == 'd' || ev.Key == termbox.KeyArrowRight:
-					game.Right()
-				case ev.Key == termbox.KeyEsc:
-					fmt.Println("游戏退出")
-					break loop
+				if !game.pause {
+					switch {
+					case ev.Ch == 'W' || ev.Ch == 'w' || ev.Key == termbox.KeyArrowUp:
+						game.Up()
+					case ev.Ch == 'S' || ev.Ch == 's' || ev.Key == termbox.KeyArrowDown:
+						game.Down()
+					case ev.Ch == 'A' || ev.Ch == 'a' || ev.Key == termbox.KeyArrowLeft:
+						game.Left()
+					case ev.Ch == 'D' || ev.Ch == 'd' || ev.Key == termbox.KeyArrowRight:
+						game.Right()
+					case ev.Ch == 'P' || ev.Ch == 'p':
+						game.Pause()
+					case ev.Key == termbox.KeyEsc:
+						fmt.Println("游戏退出")
+						break loop
+					}
+				} else {
+					if ev.Ch == 'P' || ev.Ch == 'p' {
+						game.StopPause()
+					}
 				}
 			} else if ev.Type == termbox.EventError {
 				panic(ev.Err)
@@ -72,10 +79,12 @@ loop:
 			game.Render()
 		case <-gameStepTicker.C: // 游戏状态更新定时器事件
 			// 更新游戏状态
-			gameOver := game.Step()
-			if gameOver {
-				fmt.Println("游戏结束")
-				break loop
+			if !game.pause {
+				gameOver := game.Step()
+				if gameOver {
+					fmt.Println("游戏结束")
+					break loop
+				}
 			}
 		}
 	}

@@ -11,6 +11,7 @@ type Game struct {
 	background [][]int
 	tetromino  Tetromino
 	score      int
+	pause      bool
 }
 
 type Point struct {
@@ -35,6 +36,7 @@ func (g *Game) Init(height, width int) {
 	g.tetromino = randomTetromino(TetrominoShapes)
 	g.height = height
 	g.width = width
+	g.pause = false
 }
 
 // 随机生成一个方块
@@ -221,4 +223,12 @@ func (g *Game) isFullLine(line int) bool {
 		}
 	}
 	return true
+}
+
+func (g *Game) Pause() {
+	g.pause = true
+}
+
+func (g *Game) StopPause() {
+	g.pause = false
 }
